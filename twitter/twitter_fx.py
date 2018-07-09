@@ -13,8 +13,10 @@ twitter_db = TwitterDB()
 twitter_db.create_table('twitter')
 while True:
     for q in search_tweet:
-        search_result = twitter_scraper.search_tweet(q,500)
-        twitter_db.add_record(search_result,'twitter',q)
+        search_results = twitter_scraper.search_tweet(q,5)
+        for search_result in search_results:
+            twitter_db.add_record(search_result,'twitter',q)
+        time.sleep(10)
     
 
 

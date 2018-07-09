@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 import os
 
@@ -34,10 +35,13 @@ class TwitterScraper:
         time.sleep(self.span)
     def scroll(self,scroll=10):
         for i in range(scroll):
-            actions = ActionChains(self.browser)
-            actions.send_keys(Keys.END)
-            actions.perform()
-            time.sleep(self.span)
+            try:
+                actions = ActionChains(self.browser)
+                actions.send_keys(Keys.END)
+                actions.perform()
+                time.sleep(self.span)
+            except TimeoutException:
+                break
     def login(self,email=None,password=None):
         """
         Twitterのログイン
