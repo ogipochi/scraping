@@ -109,8 +109,11 @@ class TwitterDB:
         retweet    : リツイート数(str)
 
         """
-
+        
         from datetime import datetime,date,timedelta
+        # エスケープ
+        for key in data_dict:
+            data_dict[key] = data_dict[key].translate(str.maketrans({"'":  r"\'",'"':  r'\"'}))
         
         self.create_table(tbl_name)
         # レコードがすでに存在する場合終了
