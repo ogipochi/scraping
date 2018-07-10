@@ -4,6 +4,7 @@ import time
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 import os
+from selenium.webdriver import Chrome, ChromeOptions
 
 class TwitterScraper:
     """ツイッタースクレイピング用クラス"""
@@ -16,10 +17,9 @@ class TwitterScraper:
         """
         ブラウザを開いて最大画面にして待機
         """
-        try:
-            self.browser=webdriver.PhantomJS()
-        except:
-            self.browser = webdriver.Chrome()
+        options = ChromeOptions()
+        options.add_argument('--headless')
+        self.browser = webdriver.Chrome(options=options)
         self.browser.maximize_window()
     def quit_browser(self):
         """
@@ -56,6 +56,9 @@ class TwitterScraper:
         input_password.send_keys(password or os.getenv('TWITTER_PSWD'))
         submit_button = self.browser.find_element_by_xpath('//*[@id="page-container"]/div/div[1]/form/div[2]/button')
         submit_button.click()
+        time.sleep(3)
+        print(self.browser.current_url)
+        print(self.browser.page_source)
     def search_tweet(self,q='',scroll=20):
         """
         検索ワードを受け取ってツイート情報のリストを返す
@@ -78,11 +81,13 @@ class TwitterScraper:
             actions.perform()
             time.sleep(self.span)
         # ツイートストリームの取得
+        
         tweet_list = self.browser.find_element_by_css_selector('#stream-items-id')
         tweet_cards = tweet_list.find_elements_by_css_selector('li.js-stream-item.stream-item.stream-item[data-item-type="tweet"]')
         
         tweet_info_dict_list = []
-        for tweet_card in tweet_cards:
+        for i,tweet_card in enumerate(tweet_cards):
+            print(i)
             tweet_info_dict = dict()
             
             tweet_id = tweet_card.get_attribute("data-item-id")

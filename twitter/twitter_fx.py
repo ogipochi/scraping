@@ -21,8 +21,9 @@ twitter_db = TwitterDB()
 twitter_db.create_table('twitter')
 while True:
     for q in search_tweet:
-        search_results = twitter_scraper.search_tweet(q,args[1])
-        for search_result in search_results:
+        search_results = twitter_scraper.search_tweet(q,int(args[1]))
+        logger.info('search finished for keyword ',q)
+        for i,search_result in enumerate(search_results):
             twitter_db.add_record(search_result,'twitter',q)
         logger.info(q,'is finised...exceed...')
         time.sleep(10)

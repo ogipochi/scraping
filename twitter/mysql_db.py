@@ -139,6 +139,7 @@ class TwitterDB:
                   )
         )
         self.exec_cmd(script)
+        self.logger.info('[SQL-COMP]',script)
         return True
     def exist_record(self,data_dict,tbl_name):
         """
