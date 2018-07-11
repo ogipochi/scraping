@@ -92,33 +92,37 @@ class TwitterScraper:
         
         tweet_info_dict_list = []
         for i,tweet_card in enumerate(tweet_cards):
-            tweet_info_dict = dict()
-            
-            tweet_id = tweet_card.get_attribute("data-item-id")
-            
-            content = tweet_card.find_element_by_css_selector('div.content')
-            username = content.find_element_by_css_selector('.username').text
-            text = content.find_element_by_css_selector('p.TweetTextSize.js-tweet-text.tweet-text').text
-            tweet_time = content.find_element_by_css_selector('small.time a.tweet-timestamp').get_attribute('title')
-            conversation_id = content.find_element_by_css_selector('small.time a.tweet-timestamp').get_attribute('data-conversation-id')
-            user_id = content.find_element_by_css_selector('.stream-item-header a.account-group').get_attribute('data-user-id')
-            action_retweet = content.find_element_by_css_selector('button.ProfileTweet-actionButton.js-actionButton.js-actionRetweet').text.split('リツイート')[-1]
-            action_reply = content.find_element_by_css_selector('button.ProfileTweet-actionButton.js-actionButton.js-actionReply').text.split('返信')[-1]
-            action_favorite = content.find_element_by_css_selector('button.ProfileTweet-actionButton.js-actionButton.js-actionFavorite').text.split('いいね')[-1]
-            tweet_data = content.find_element_by_css_selector('span._timestamp.js-short-timestamp')
-            
-            tweet_info_dict["tweet_id"] = tweet_id
-            tweet_info_dict["username"] = username
-            tweet_info_dict["tweet_time"] = tweet_time
-            tweet_info_dict["user_id"] = user_id
-            tweet_info_dict["conversation_id"] = conversation_id
-            tweet_info_dict["retweet"] = action_retweet.split('\n')[-1]
-            tweet_info_dict["reply"] = action_reply.split('\n')[-1]
-            tweet_info_dict["favorite"] = action_favorite.split('\n')[-1]
-            tweet_info_dict["tweet_text"] = text
-            tweet_info_dict_list.append(tweet_info_dict)
-        
-        return tweet_info_dict_list
+            try:
+                tweet_info_dict = dict()
+                
+                tweet_id = tweet_card.get_attribute("data-item-id")
+                
+                content = tweet_card.find_element_by_css_selector('div.content')
+                username = content.find_element_by_css_selector('.username').text
+                text = content.find_element_by_css_selector('p.TweetTextSize.js-tweet-text.tweet-text').text
+                tweet_time = content.find_element_by_css_selector('small.time a.tweet-timestamp').get_attribute('title')
+                conversation_id = content.find_element_by_css_selector('small.time a.tweet-timestamp').get_attribute('data-conversation-id')
+                user_id = content.find_element_by_css_selector('.stream-item-header a.account-group').get_attribute('data-user-id')
+                action_retweet = content.find_element_by_css_selector('button.ProfileTweet-actionButton.js-actionButton.js-actionRetweet').text.split('リツイート')[-1]
+                action_reply = content.find_element_by_css_selector('button.ProfileTweet-actionButton.js-actionButton.js-actionReply').text.split('返信')[-1]
+                action_favorite = content.find_element_by_css_selector('button.ProfileTweet-actionButton.js-actionButton.js-actionFavorite').text.split('いいね')[-1]
+                tweet_data = content.find_element_by_css_selector('span._timestamp.js-short-timestamp')
+                
+                tweet_info_dict["tweet_id"] = tweet_id
+                tweet_info_dict["username"] = username
+                tweet_info_dict["tweet_time"] = tweet_time
+                tweet_info_dict["user_id"] = user_id
+                tweet_info_dict["conversation_id"] = conversation_id
+                tweet_info_dict["retweet"] = action_retweet.split('\n')[-1]
+                tweet_info_dict["reply"] = action_reply.split('\n')[-1]
+                tweet_info_dict["favorite"] = action_favorite.split('\n')[-1]
+                tweet_info_dict["tweet_text"] = text
+                yield tweet_info_dict
+                #tweet_info_dict_list.append(tweet_info_dict)
+            except Exception as e:
+                print('[Error]',e)
+                self.logger.error(e)
+        #return tweet_info_dict_list
     def get_reply_by_original_tweet_id(self,username,tweet_id,scroll=100):
         self.browser.get('https://twitter.com/'+username+'/status/'+tweet_id)
         # スクロール

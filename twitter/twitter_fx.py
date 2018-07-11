@@ -11,6 +11,8 @@ import logging
 
 search_tweet = ['為替','exchange','money order','dollar','rate','yen','euro','economics','経済','ドル']
 
+
+
 args = sys.argv
 logger = logging.getLogger()
 twitter_scraper = TwitterScraper()
@@ -18,14 +20,16 @@ twitter_scraper.open_browser()
 twitter_scraper.logout()
 twitter_scraper.login()
 twitter_db = TwitterDB()
-twitter_db.create_table('twitter')
+twitter_db.create_table('twitter_db')
+
 while True:
+    keyword = twitter_db.exec_cmd('SELECT keyword FROM query;')
+    if keyword:
+        search_tweet = keyword
     for q in search_tweet:
-        search_results = twitter_scraper.search_tweet(q,int(args[1]))
-        logger.info('search finished for keyword ',q)
-        for i,search_result in enumerate(search_results):
-            twitter_db.add_record(search_result,'twitter',q)
-        logger.info(q,'is finised...exceed...')
+        for result in twitter_scraper.search_tweet(q,int(args[1]))
+            twitter_db.add_record(result,'twitter_db',q)
+            twitter_db.commit()
         time.sleep(10)
     
 

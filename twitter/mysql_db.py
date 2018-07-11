@@ -53,7 +53,10 @@ class TwitterDB:
         # 再接続
         self.reconnect()
         self.cur = self.conn.cursor()
-        self.cur.execute(cmd)
+        try:
+            self.cur.execute(cmd)
+        except:
+            return False
         if fetch:
             return self.cur.fetchall()
         
@@ -140,6 +143,7 @@ class TwitterDB:
                   )
         )
         self.exec_cmd(script)
+        print('[EXECUTE]',sql)
         self.logger.info('[SQL-COMP]',script)
         return True
     def exist_record(self,data_dict,tbl_name):
@@ -169,6 +173,8 @@ class TwitterDB:
     def close(self):
         self.cur.close()
         self.conn.close()
+    def commit(self):
+        self.conn.commit()
         
         
         
