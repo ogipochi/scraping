@@ -118,6 +118,7 @@ class TwitterDB:
         self.create_table(tbl_name)
         # レコードがすでに存在する場合終了
         if self.exist_record(data_dict,tbl_name):
+            print('skip')
             return False 
         script = ("INSERT INTO " + tbl_name + 
                   " (TweetID , UserName , UserID ,ConversationID , TweetTime , TweetText ," 

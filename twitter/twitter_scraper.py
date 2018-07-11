@@ -5,7 +5,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 import os
 from selenium.webdriver import Chrome, ChromeOptions
-
+import logging
 class TwitterScraper:
     """ツイッタースクレイピング用クラス"""
     def __init__(self,span=4,):
@@ -13,6 +13,7 @@ class TwitterScraper:
         span : ページ読み込み待機時の秒数
         """
         self.span = span
+        self.logger = logging.getLogger()
     def open_browser(self):
         """
         ブラウザを開いて最大画面にして待機
@@ -41,7 +42,7 @@ class TwitterScraper:
                 actions.perform()
                 time.sleep(self.span)
             except TimeoutException:
-                break
+                return 
     def login(self,email=None,password=None):
         """
         Twitterのログイン
@@ -76,10 +77,14 @@ class TwitterScraper:
         
         # 指定された回数スクロール
         for i in range(scroll):
-            actions = ActionChains(self.browser)
-            actions.send_keys(Keys.END)
-            actions.perform()
-            time.sleep(self.span)
+            try:
+                actions = ActionChains(self.browser)
+                actions.send_keys(Keys.END)
+                actions.perform()
+                time.sleep(self.span)
+            except TimeoutException:
+                self.logger.info('ti')
+                break
         # ツイートストリームの取得
         
         tweet_list = self.browser.find_element_by_css_selector('#stream-items-id')
@@ -87,7 +92,6 @@ class TwitterScraper:
         
         tweet_info_dict_list = []
         for i,tweet_card in enumerate(tweet_cards):
-            print(i)
             tweet_info_dict = dict()
             
             tweet_id = tweet_card.get_attribute("data-item-id")
