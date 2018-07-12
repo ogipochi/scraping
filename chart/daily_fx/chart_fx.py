@@ -4,7 +4,7 @@ import time,os,sys,logging
 import multiprocessing
 
 
-iteration = 100
+iteration = 30
 span_time=0
 
 daily_fx_chart_scraper = DairyFxChartScraper()
