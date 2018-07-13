@@ -27,9 +27,13 @@ while True:
     if keyword:
         search_tweet = keyword
     for q in search_tweet:
-        for result in twitter_scraper.search_tweet(q,int(args[1]))
+        for result in twitter_scraper.search_tweet(q,int(args[1])):
             twitter_db.add_record(result,'twitter_db',q)
             twitter_db.commit()
+        twitter_scraper.quit_browser()
+        twitter_scraper.open_browser()
+        twitter_scraper.logout()
+        twitter_scraper.login()
         time.sleep(10)
     
 
