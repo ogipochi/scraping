@@ -22,6 +22,7 @@ class MySqlBase:
         # 接続できていない場合再接続
         if self.conn.is_connected==False:
             self.reconnect()
+    
     def reconnect(self):
         """
         再接続後接続確認し,
@@ -99,11 +100,28 @@ class ChartDB(MySqlBase):
                  )
         self.exec_cmd(script)
         return True
+    
+    def multi_construct_at_once(self,tbl_name,data_list):
+        # 複数データINSERT用
+        self.multi_script = "INSERT INTO " + tbl_name + " (symbol , bid , ask , spread , obtained ) VALUES "
+        for data_dict in data_list:
+            for key in ('bid','ask','spread'):
+                data_dict[key] = data_dict[key].translate(str.maketrans({"'":  r"\'",'"':  r'\"',' ':'\s'}))
+            self.multi_script + "('{symbol}','{bid}' , '{ask}' , '{spread}' , '{datetime}' ) ,".format(
+                      symbol = data_dict["symbol"],
+                      bid = data_dict["bid"],
+                      ask = data_dict["ask"],
+                      spread = data_dict["spread"],
+                      datetime = data_dict["datetime"],)
+        script_list = list(self.multi_script)
+        script_list[-1] = ";"
+        self.multi_script = "".join(script_list)
+    def multi_add(self,tbl_name,data_list):
+        self.exec_cmd(self.multi_add)
     def add_record(self,data_dict,tbl_name,pr=False):
         from datetime import datetime,date,timedelta
         # エスケープ
-        for key in ('bid','ask','spread'):
-            data_dict[key] = data_dict[key].translate(str.maketrans({"'":  r"\'",'"':  r'\"',' ':'\s'}))
+        
         script = ("INSERT INTO " + tbl_name + 
                   " (symbol , bid , ask , spread , obtained ) "
                   "VALUES ('{symbol}','{bid}' , '{ask}' , '{spread}' , '{datetime}' );".format(

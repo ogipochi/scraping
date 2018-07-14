@@ -3,7 +3,7 @@ from chart import DairyFxChartScraper
 import time,os,sys,logging
 import threading
 from mysql.connector.errors import OperationalError
-from datetime import dateitme
+from datetime import datetime
 
 
 iteration = 10
@@ -11,18 +11,20 @@ first_inuse = False
 second_inuse = False
 third_inuse = False
 forth_inuse = False
-span_time=10
+span_time=3
 span_increment = 1
 span_rate_of_change = 0.96
+tbl_name = 'daily'
 
 host_1 = os.getenv('SQL_HOST_1')
 host_2 = os.getenv('SQL_HOST_2')
 host_3 = os.getenv('SQL_HOST_3')
 host_4 = os.getenv('SQL_HOST_4')
 
+
+
 user = os.getenv('SQL_USER')
 pswd = os.getenv('SQL_PSWD')
-
 db_name = os.getenv('SQL_DBNAME')
 
 daily_fx_chart_scraper = DairyFxChartScraper()
@@ -34,14 +36,14 @@ chart_db_first = ChartDB(
     pswd=pswd,
     db_name=db_name
 )
-chart_db_first.create_table('daily')
+chart_db_first.create_table(tbl_name)
 chart_db_second = ChartDB(
     host=host_2,
     user=user,
     pswd=pswd,
     db_name=db_name
 )
-chart_db_second.create_table('daily')
+chart_db_second.create_table(tbl_name)
 
 chart_db_third = ChartDB(
     host=host_3,
@@ -49,7 +51,7 @@ chart_db_third = ChartDB(
     pswd=pswd,
     db_name=db_name
 )
-chart_db_third.create_table('daily')
+chart_db_third.create_table(tbl_name)
 
 chart_db_forth = ChartDB(
     host=host_4,
@@ -57,9 +59,9 @@ chart_db_forth = ChartDB(
     pswd=pswd,
     db_name=db_name
 )
-chart_db_forth.create_table('daily')
+chart_db_forth.create_table(tbl_name)
 
-def save_first(info_list):
+def save_first(script):
     """
     INSERT権限を渡されて,すべてのデータを格納するまで繰り返す
     待ち回数が増えるたびにspan_timeをインクリメント
@@ -68,6 +70,7 @@ def save_first(info_list):
     global first_inuse
     global span_increment
     global span_rate_of_change
+    global chart_db_first
     while True:
         if first_inuse:
             span_increment = span_increment * span_rate_of_change
@@ -77,19 +80,19 @@ def save_first(info_list):
             continue
         else:
             first_inuse = True
-            for info_dict in info_list:
-                chart_db_first.add_record(info_dict,'daily')
+            chart_db_first.exec_cmd(script)
             break
     chart_db_first.commit()
     first_inuse = False
 
     return True
 
-def save_second(info_list):
+def save_second(script):
     global span_time
     global second_inuse
     global span_increment
     global span_rate_of_change
+    global chart_db_second
     while True:
         if second_inuse:
             span_increment = span_increment * span_rate_of_change
@@ -100,18 +103,18 @@ def save_second(info_list):
         else:
             second_inuse = True
             
-            for info_dict in info_list:
-                chart_db_second.add_record(info_dict,'daily',False)
+            chart_db_second.exec_cmd(script)
             break
     chart_db_second.commit()
     second_inuse = False
     return True
 
-def save_third(info_list):
+def save_third(script):
     global span_time
     global third_inuse
     global span_increment
     global span_rate_of_change
+    global chart_db_third
     while True:
         if third_inuse:
             span_increment = span_increment * span_rate_of_change
@@ -121,18 +124,18 @@ def save_third(info_list):
             continue
         else:
             third_inuse = True
-            for info_dict in info_list:
-                chart_db_third.add_record(info_dict,'daily',False)
+            chart_db_forth.exec_cmd(script)
             break
     chart_db_third.commit()
     third_inuse = False
     return True
 
-def save_forth(info_list):
+def save_forth(script):
     global span_time
     global forth_inuse
     global span_increment
     global span_rate_of_change
+    global chart_db_forth
     while True:
         if forth_inuse:
             span_increment = span_increment * span_rate_of_change
@@ -142,8 +145,7 @@ def save_forth(info_list):
             continue
         else:
             forth_inuse = True
-            for info_dict in info_list:
-                chart_db_forth.add_record(info_dict,'daily',False)
+            chart_db_forth.exec_cmd(script)
             break
     chart_db_forth.commit()
     forth_inuse = False
@@ -151,34 +153,69 @@ def save_forth(info_list):
 
 
 
+def script_addition_construst(data_list):
+    script_addition = ""
+    for data_dict in data_list:
+        script_addition+="('{symbol}' , '{bid}' , '{ask}' , '{spread}' , '{datetime}') ,".format(
+                    symbol = data_dict["symbol"],
+                    bid = data_dict["bid"],
+                    ask = data_dict["ask"],
+                    spread = data_dict["spread"],
+                    datetime = data_dict["datetime"],)
+    return script_addition
+
 
 
 while True:
-    info_list = []
+    script = "INSERT INTO " + tbl_name + " (symbol , bid , ask , spread , obtained ) VALUES "
     for i in range(iteration):
-        info_list.extend(daily_fx_chart_scraper.get_info_as_list())
-        time.sleep(span_time)
-    print(info_list[0])
-    th = threading.Thread(target=save_first,kwargs = {'info_list':info_list})
+        # すべてのデータを取得
+        data_list = daily_fx_chart_scraper.get_info_as_list()
+        
+        script += script_addition_construst(data_list)
+    script_list = list(script)
+    script_list[-1] = ";"
+    script = "".join(script_list)
+    print('thread start')
+    print(script)
+    th = threading.Thread(target=save_first,kwargs = {'script':script})
     th.start()
-    info_list = []
+    script = "INSERT INTO " + tbl_name + " (symbol , bid , ask , spread , obtained ) VALUES "
     for i in range(iteration):
-        info_list.extend(daily_fx_chart_scraper.get_info_as_list())
-        time.sleep(span_time)
-    print(info_list[0])
-    th = threading.Thread(target=save_second,kwargs={'info_list':info_list})
+        # すべてのデータを取得
+        data_list = daily_fx_chart_scraper.get_info_as_list()
+        
+        script += script_addition_construst(data_list)
+    script_list = list(script)
+    script_list[-1] = ";"
+    script = "".join(script_list)
+    print('thread start')
+    th = threading.Thread(target=save_second,kwargs = {'script':script})
     th.start()
 
+
+    script = "INSERT INTO " + tbl_name + " (symbol , bid , ask , spread , obtained ) VALUES "
     for i in range(iteration):
-        info_list.extend(daily_fx_chart_scraper.get_info_as_list())
-        time.sleep(span_time)
-    print(info_list[0])
-    th = threading.Thread(target=save_third,kwargs={'info_list':info_list})
+        # すべてのデータを取得
+        data_list = daily_fx_chart_scraper.get_info_as_list()
+        
+        script += script_addition_construst(data_list)
+    script_list = list(script)
+    script_list[-1] = ";"
+    script = "".join(script_list)
+    print('thread start')
+    th = threading.Thread(target=save_second,kwargs = {'script':script})
     th.start()
 
+    script = "INSERT INTO " + tbl_name + " (symbol , bid , ask , spread , obtained ) VALUES "
     for i in range(iteration):
-        info_list.extend(daily_fx_chart_scraper.get_info_as_list())
-        time.sleep(span_time)
-    print(info_list[0])
-    th = threading.Thread(target=save_forth,kwargs={'info_list':info_list})
+        # すべてのデータを取得
+        data_list = daily_fx_chart_scraper.get_info_as_list()
+        
+        script += script_addition_construst(data_list)
+    script_list = list(script)
+    script_list[-1] = ";"
+    script = "".join(script_list)
+    print('thread start')
+    th = threading.Thread(target=save_forth,kwargs = {'script':script})
     th.start()
