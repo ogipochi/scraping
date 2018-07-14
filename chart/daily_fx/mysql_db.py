@@ -34,7 +34,7 @@ class MySqlBase:
                               "port     : {port}\n"
                               "user     : {user}\n"
                               "password : {pswd}\n"
-                              "database : {db}\n"
+                              "database : {db_name}\n"
                              "Please Check!!!".format(
                                  host=self.host,
                                  port = self.port,
@@ -90,32 +90,33 @@ class ChartDB(MySqlBase):
             return False
         script = ("CREATE TABLE " + tbl_name + 
                   " (id integer NOT NULL AUTO_INCREMENT," +
+                  " symbol char(16) ," + 
                   " bid char(16) ,"+
                   " ask char(16) ,"+
                   " spread char(16) ," +
-                  " obtained datetime ," + 
-                  " order integer ," + 
+                  " obtained datetime ," +  
                   " PRIMARY KEY (id));"
                  )
         self.exec_cmd(script)
         return True
-    def add_record(self,data_dict,tbl_name):
+    def add_record(self,data_dict,tbl_name,pr=False):
         from datetime import datetime,date,timedelta
         # エスケープ
-        for key in data_dict:
+        for key in ('bid','ask','spread'):
             data_dict[key] = data_dict[key].translate(str.maketrans({"'":  r"\'",'"':  r'\"',' ':'\s'}))
         script = ("INSERT INTO " + tbl_name + 
-                  " (bid , ask , spread , datetime , obtained , order ) "
-                  "VALUES ('{bid}' , '{ask}' , '{spread}' , '{datetime}' , '{order}' );".format(
+                  " (symbol , bid , ask , spread , obtained ) "
+                  "VALUES ('{symbol}','{bid}' , '{ask}' , '{spread}' , '{datetime}' );".format(
+                      symbol = data_dict["symbol"],
                       bid = data_dict["bid"],
                       ask = data_dict["ask"],
                       spread = data_dict["spread"],
                       datetime = data_dict["datetime"],
-                      order = data_dict["order"]
                   )
                 )
         self.exec_cmd(script)
-        print('[EXECUTE]',script)
+        if pr:
+            print(script)
         self.logger.info('[SQL-COMP]',script)
         return True
         
@@ -155,7 +156,7 @@ class TwitterDB:
                               "port     : {port}\n"
                               "user     : {user}\n"
                               "password : {pswd}\n"
-                              "database : {db}\n"
+                              "database : {db_name}\n"
                              "Please Check!!!".format(
                                  host=self.host,
                                  port = self.port,
@@ -214,7 +215,7 @@ class TwitterDB:
                   " Obtained datetime);"
                  )
         
-        self.exec_cmd(script)
+        self.exec_cmd(dbscript)
         return True
     def confirm_table_exist(self,tbl_name):
         # テーブル名を受取り,その名前のテーブルが存在するか否かをBool型で返す
@@ -275,7 +276,7 @@ class TwitterDB:
                   )
         )
         self.exec_cmd(script)
-        print('[EXECUTE]',script)
+        
         self.logger.info('[SQL-COMP]',script)
         return True
     def exist_record(self,data_dict,tbl_name):
