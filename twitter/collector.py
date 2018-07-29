@@ -31,7 +31,7 @@ class Collector:
         self.twitter.open_browser()
         self.twitter.logout()
         self.twitter.login(os.getenv('TWITTER_EMAIL'),os.getenv('TWITTER_PSWD'))
-        for tweet in self.twitter.search_tweet(q=query,scroll=1):
+        for tweet in self.twitter.search_tweet(q=query,scroll=500):
             yield tweet
         self.twitter.quit_browser()
     def collect(self,query):
