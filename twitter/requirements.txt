@@ -15,7 +15,7 @@ constantly==15.1.0
 cryptography==2.2.2
 cssselect==1.0.3
 decorator==4.2.1
-Django==1.11
+Django==1.11.29
 django-nested-inline==0.3.7
 docutils==0.14
 docx2txt==0.6
