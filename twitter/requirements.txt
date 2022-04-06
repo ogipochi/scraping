@@ -46,7 +46,7 @@ mysql-connector==2.1.6
 mysql-connector-python-rf==2.2.2
 nbconvert==5.3.1
 nbformat==4.4.0
-notebook==5.4.1
+notebook==6.4.10
 numpy==1.14.2
 pandas==0.22.0
 pandocfilters==1.4.2
